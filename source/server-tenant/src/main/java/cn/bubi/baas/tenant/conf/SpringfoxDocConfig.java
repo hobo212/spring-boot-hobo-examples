@@ -1,5 +1,8 @@
 package cn.bubi.baas.tenant.conf;
 
+import static com.google.common.base.Predicates.or;
+import static springfox.documentation.builders.PathSelectors.regex;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -13,10 +16,6 @@ import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
-import static com.google.common.base.Predicates.or;
-import static com.google.common.collect.Lists.newArrayList;
-import static springfox.documentation.builders.PathSelectors.regex;
 
 @Configuration
 @EnableSwagger2
@@ -39,6 +38,8 @@ public class SpringfoxDocConfig {
                 .build()
                 .apiInfo(demoApiInfo());
     }
+    
+    @SuppressWarnings("unchecked")
     private Predicate<String> petstorePaths() {
         return or(
                 regex("/api.*")
@@ -50,7 +51,7 @@ public class SpringfoxDocConfig {
                 appTitle,//小标题
                 version,//版本
                 "",
-                contact,//作者
+                contact,
                 appTitle,//链接显示文字
                 ""//网站链接
         );

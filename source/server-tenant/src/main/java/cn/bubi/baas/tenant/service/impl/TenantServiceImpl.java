@@ -17,8 +17,9 @@ public class TenantServiceImpl implements TenantService{
     @Override
     public List<TenantVO> list() {
         System.out.println(conf.getAddress());
-        // TODO Auto-generated method stub
-        return new ArrayList<>();
+        List<TenantVO> result = new ArrayList<>();
+        result.add(new TenantVO("1","2","3"));
+        return result;
     }
 
 }

@@ -2,9 +2,9 @@ package cn.bubi.baas.tenant.web.ctrl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import cn.bubi.baas.tenant.service.TenantService;
 /**
@@ -22,9 +22,8 @@ public class TenantCtrl {
      * TODO分页
      * @return
      */
-    @PostMapping(value="/list", produces = "application/json; charset=utf-8")
-    public String list(ModelMap model){
-        model.put("list", tenantService.list());
-        return "tenant/list";
+    @GetMapping
+    public ModelAndView list() {
+        return new ModelAndView("tenant/list", "tenant", tenantService.list());
     }
 }
