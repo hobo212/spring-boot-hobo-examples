@@ -1,4 +1,4 @@
-package org.server.tenant2;
+package test.cn.bubi.baas.tenant;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
