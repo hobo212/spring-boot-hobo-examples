@@ -24,6 +24,6 @@ public class TenantCtrl {
      */
     @GetMapping
     public ModelAndView list() {
-        return new ModelAndView("tenant/list", "tenant", tenantService.list());
+        return new ModelAndView("tenant/list", "list", tenantService.list());
     }
 }
