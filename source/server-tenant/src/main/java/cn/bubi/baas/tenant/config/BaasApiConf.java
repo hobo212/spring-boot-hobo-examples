@@ -1,4 +1,4 @@
-package cn.bubi.baas.tenant.conf;
+package cn.bubi.baas.tenant.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

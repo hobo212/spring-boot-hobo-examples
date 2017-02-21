@@ -1,4 +1,4 @@
-package cn.bubi.baas.tenant.conf;
+package cn.bubi.baas.tenant.config;
 
 import static com.google.common.base.Predicates.or;
 import static springfox.documentation.builders.PathSelectors.regex;

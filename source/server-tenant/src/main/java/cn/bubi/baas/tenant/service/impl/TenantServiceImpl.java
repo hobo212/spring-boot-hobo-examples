@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import cn.bubi.baas.tenant.conf.BaasApiConf;
+import cn.bubi.baas.tenant.config.BaasApiConf;
 import cn.bubi.baas.tenant.service.TenantService;
 import cn.bubi.baas.tenant.web.vo.TenantVO;
 

@@ -1,4 +1,4 @@
-package cn.bubi.baas.tenant.web.ctrl;
+package cn.bubi.baas.tenant.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
