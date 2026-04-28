@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ht-review — 双路交叉代码 Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0c0f;
+    --bg2:       #0f1217;
+    --bg3:       #161b22;
+    --border:    #21262d;
+    --border2:   #30363d;
+    --cyan:      #39d0d8;
+    --cyan-dim:  #1a6b70;
+    --amber:     #f0a429;
+    --amber-dim: #6b4a12;
+    --red:       #ff5f57;
+    --green:     #3fb950;
+    --orange:    #d29922;
+    --text:      #e6edf3;
+    --text2:     #8b949e;
+    --text3:     #484f58;
+    --mono:      'Space Mono', 'Courier New', monospace;
+    --sans:      'Syne', sans-serif;
+    --body:      'Noto Sans SC', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo .name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-logo .tagline {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .nav-section {
+    padding: 16px 0 8px;
+  }
+
+  .nav-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 0 24px 6px;
+  }
+
+  .nav-item {
+    display: block;
+    padding: 7px 24px;
+    font-size: 13px;
+    color: var(--text2);
+    text-decoration: none;
+    font-family: var(--mono);
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--cyan); border-left-color: var(--cyan); background: rgba(57,208,216,0.05); }
+
+  /* ── MAIN ── */
+  main {
+    padding: 0;
+    max-width: 900px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 72px 64px 56px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(57,208,216,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(57,208,216,0.1);
+    border: 1px solid var(--cyan-dim);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+    letter-spacing: 0.06em;
+  }
+
+  .hero-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1 {
+    font-family: var(--sans);
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 .accent { color: var(--cyan); }
+
+  .hero p {
+    font-size: 16px;
+    color: var(--text2);
+    max-width: 580px;
+    line-height: 1.6;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .hero-stat .num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .hero-stat .lbl {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    padding: 56px 64px;
+  }
+
+  section {
+    margin-bottom: 72px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  section.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-family: var(--sans);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+    color: var(--text);
+  }
+
+  h4 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber);
+    margin: 20px 0 8px;
+    letter-spacing: 0.04em;
+  }
+
+  p { color: var(--text2); margin-bottom: 14px; }
+  p:last-child { margin-bottom: 0; }
+
+  strong { color: var(--text); font-weight: 500; }
+
+  /* ── CODE ── */
+  code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--cyan);
+  }
+
+  pre {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 10px; right: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text2);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .comment { color: var(--text3); }
+  .kw { color: #ff79c6; }
+  .str { color: var(--green); }
+  .cmd { color: var(--cyan); }
+  .flag { color: var(--amber); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--border2);
+  }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 10px 14px;
+    color: var(--text2);
+    vertical-align: top;
+  }
+
+  tbody td:first-child { color: var(--text); font-family: var(--mono); font-size: 12.5px; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+    margin: 16px 0;
+  }
+
+  .flow-phase {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--text2);
+  }
+
+  .flow-num {
+    color: var(--cyan);
+    font-weight: 700;
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+
+  .flow-tree {
+    padding-left: 72px;
+    color: var(--text3);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .flow-tree .branch { color: var(--text3); }
+  .flow-tree .leaf { color: var(--text2); }
+  .flow-tree .highlight { color: var(--amber); }
+  .flow-sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+  /* ── DIMENSIONS GRID ── */
+  .dim-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .dim-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    transition: border-color 0.2s;
+  }
+
+  .dim-card:hover { border-color: var(--border2); }
+
+  .dim-card.always { border-left: 3px solid var(--cyan); }
+  .dim-card.conditional { border-left: 3px solid var(--amber); }
+
+  .dim-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .dim-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .dim-name {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .dim-trigger {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-left: auto;
+  }
+
+  .always .dim-trigger { background: rgba(57,208,216,0.1); color: var(--cyan); }
+  .conditional .dim-trigger { background: rgba(240,164,41,0.1); color: var(--amber); }
+
+  .dim-items {
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 1.6;
+  }
+
+  /* ── LANG CARDS ── */
+  .lang-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .lang-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+  }
+
+  .lang-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .lang-name {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .tool-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .tool-row:last-child { border-bottom: none; }
+
+  .tool-name { font-family: var(--mono); color: var(--text); flex: 1; }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .badge-must { background: rgba(255,95,87,0.15); color: var(--red); }
+  .badge-run  { background: rgba(63,185,80,0.12); color: var(--green); }
+  .badge-opt  { background: rgba(139,148,158,0.1); color: var(--text3); }
+
+  /* ── DEPLOY TABLE ── */
+  .deploy-table td:first-child { color: var(--text); font-family: var(--mono); font-size: 12px; }
+
+  .risk-high   { color: var(--red); font-weight: 700; }
+  .risk-medium { color: var(--orange); font-weight: 700; }
+  .risk-low    { color: var(--green); font-weight: 700; }
+
+  /* ── CACHE TREE ── */
+  .file-tree {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+  }
+
+  .ft-dir { color: var(--cyan); }
+  .ft-file { color: var(--text2); }
+  .ft-comment { color: var(--text3); font-style: italic; }
+  .ft-indent { padding-left: 20px; display: block; }
+  .ft-indent2 { padding-left: 40px; display: block; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13.5px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .callout-info { background: rgba(57,208,216,0.07); border: 1px solid var(--cyan-dim); color: var(--text2); }
+  .callout-warn { background: rgba(240,164,41,0.07); border: 1px solid var(--amber-dim); color: var(--text2); }
+  .callout-danger { background: rgba(255,95,87,0.07); border: 1px solid rgba(255,95,87,0.3); color: var(--text2); }
+
+  .callout-icon { flex-shrink: 0; font-size: 16px; line-height: 1.4; }
+
+  /* ── CONSENSUS GRID ── */
+  .consensus-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .consensus-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .consensus-badge {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .cb-both   { background: rgba(57,208,216,0.15); color: var(--cyan); }
+  .cb-claude { background: rgba(63,185,80,0.12); color: var(--green); }
+  .cb-codex  { background: rgba(210,153,34,0.15); color: var(--orange); }
+
+  .consensus-label { font-size: 12px; color: var(--text3); }
+  .consensus-conf  { font-family: var(--mono); font-size: 11px; margin-top: 4px; }
+
+  .conf-high { color: var(--cyan); }
+  .conf-mid  { color: var(--text3); }
+
+  /* ── REPORT PREVIEW ── */
+  .report-preview {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .rp-bar {
+    background: #1c2128;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rp-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .rp-body {
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text2);
+  }
+
+  .rp-title { color: var(--text); font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .rp-meta  { color: var(--text3); font-size: 11px; margin-bottom: 16px; }
+  .rp-h2    { color: var(--cyan); font-weight: 700; margin: 14px 0 4px; }
+  .rp-h3    { color: var(--amber); margin: 8px 0 2px; }
+  .rp-ok    { color: var(--green); }
+  .rp-warn  { color: var(--orange); }
+  .rp-save  { color: var(--text3); border-top: 1px solid var(--border); margin-top: 14px; padding-top: 10px; }
+
+  /* ── CONFIG EXAMPLE ── */
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  /* ── DIVIDER ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { position: relative; height: auto; }
+    .hero, .content { padding: 32px 24px; }
+    .dim-grid, .lang-grid, .consensus-grid, .config-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 36px !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside>
+  <div class="sidebar-logo">
+    <div class="name">ht-review</div>
+    <div class="tagline">Claude Code Skill · v1.0</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">入门</div>
+    <a class="nav-item active" href="#overview">概述</a>
+    <a class="nav-item" href="#usage">使用方式</a>
+    <a class="nav-item" href="#flow">执行流程</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">核心功能</div>
+    <a class="nav-item" href="#static">静态分析前置</a>
+    <a class="nav-item" href="#dimensions">审查维度</a>
+    <a class="nav-item" href="#deployment">上线注意事项</a>
+    <a class="nav-item" href="#cross">交叉合并规则</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">配置</div>
+    <a class="nav-item" href="#config">三层配置体系</a>
+    <a class="nav-item" href="#review-md">REVIEW.md</a>
+    <a class="nav-item" href="#ignore">忽略规则</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">报告 & 存储</div>
+    <a class="nav-item" href="#report">报告格式</a>
+    <a class="nav-item" href="#storage">本地持久化</a>
+    <a class="nav-item" href="#history">历史查询</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">其他</div>
+    <a class="nav-item" href="#codex">Codex CLI（可选）</a>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span> Claude Code Skill</div>
+    <h1>ht-<span class="accent">review</span></h1>
+    <p>双路交叉代码 Review skill。Claude Code 与 Codex CLI 各自独立审查，交叉合并结果，内置静态分析前置、上线注意事项提取与历史持久化。</p>
+    <div class="hero-meta">
+      <div class="hero-stat"><span class="num">10</span><span class="lbl">审查维度</span></div>
+      <div class="hero-stat"><span class="num">3</span><span class="lbl">支持语言</span></div>
+      <div class="hero-stat"><span class="num">7</span><span class="lbl">执行阶段</span></div>
+      <div class="hero-stat"><span class="num">∞</span><span class="lbl">历史记录</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- ═══ OVERVIEW ═══ -->
+  <section id="overview">
+    <div class="section-label">概述</div>
+    <h2>工作原理</h2>
+    <p><strong>双路交叉</strong>是核心设计：Claude Code 和 Codex CLI 各自独立审查同一份代码，再交叉合并。两路都发现的问题标为「共识」（高置信度），单路发现的也保留。</p>
+    <p>在 AI review 之前，先通过工具链做<strong>确定性的编译和静态分析检查</strong>。编译失败立即终止，工具发现的问题作为确定性上下文注入 AI review，不再由 AI 重新判断。</p>
+
+    <div class="consensus-grid">
+      <div class="consensus-card">
+        <div class="consensus-badge cb-both">[共识]</div>
+        <div class="consensus-label">Claude + Codex 均发现</div>
+        <div class="consensus-conf conf-high">置信度：高</div>
+      </div>
+      <div class="consensus-card">
+        <div class="consensus-badge cb-claude">[Claude]</div>
+        <div class="consensus-label">仅 Claude 发现</div>
+        <div class="consensus-conf conf-mid">置信度：中</div>
+      </div>
+      <div class="consensus-card">
+        <div class="consensus-badge cb-codex">[Codex]</div>
+        <div class="consensus-label">仅 Codex 发现</div>
+        <div class="consensus-conf conf-mid">置信度：中</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ USAGE ═══ -->
+  <section id="usage">
+    <div class="section-label">使用方式</div>
+    <h2>命令参数</h2>
+
+    <pre data-lang="bash"><code><span class="comment"># 最常用：交互式询问代码范围</span>
+<span class="cmd">/ht-review</span>
+
+<span class="comment"># 指定 diff 范围</span>
+<span class="cmd">/ht-review</span> <span class="flag">--diff</span> HEAD~1
+<span class="cmd">/ht-review</span> <span class="flag">--diff</span> HEAD~3..HEAD
+
+<span class="comment"># branch 对比</span>
+<span class="cmd">/ht-review</span> <span class="flag">--branch</span> feature/x..main
+
+<span class="comment"># 指定文件</span>
+<span class="cmd">/ht-review</span> <span class="flag">--files</span> src/UserService.java,src/OrderService.java
+
+<span class="comment"># 注入需求文档（启用需求符合度检查）</span>
+<span class="cmd">/ht-review</span> <span class="flag">--diff</span> HEAD~1 <span class="flag">--req</span> docs/需求/功能A.md
+
+<span class="comment"># 注入测试用例文档</span>
+<span class="cmd">/ht-review</span> <span class="flag">--diff</span> HEAD~1 <span class="flag">--testcase</span> docs/tc.md
+
+<span class="comment"># 历史查询（立即退出，不触发 review）</span>
+<span class="cmd">/ht-review</span> <span class="flag">--list</span>
+<span class="cmd">/ht-review</span> <span class="flag">--list</span> <span class="flag">--filter</span> blocker
+<span class="cmd">/ht-review</span> <span class="flag">--show</span> abc1234f</code></pre>
+
+    <h3>参数速查</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>--diff &lt;ref&gt;</td><td>代码范围</td><td>如 HEAD~1、HEAD~3..HEAD</td></tr>
+        <tr><td>--branch &lt;range&gt;</td><td>代码范围</td><td>如 feature/x..main</td></tr>
+        <tr><td>--files &lt;paths&gt;</td><td>代码范围</td><td>逗号分隔文件路径</td></tr>
+        <tr><td>--req &lt;path-or-url&gt;</td><td>文档注入</td><td>.md/.txt/.pdf/.png/URL</td></tr>
+        <tr><td>--testcase &lt;path-or-url&gt;</td><td>文档注入</td><td>测试用例文档</td></tr>
+        <tr><td>--list</td><td>查询</td><td>列出最近 20 条历史（立即退出）</td></tr>
+        <tr><td>--list --filter &lt;level&gt;</td><td>查询</td><td>过滤 blocker/major/minor/info</td></tr>
+        <tr><td>--show &lt;hash&gt;</td><td>查询</td><td>按 hash 前缀展示历史报告（立即退出）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="callout callout-info">
+      <span class="callout-icon">ℹ️</span>
+      <div>代码范围参数均可省略，省略时交互式询问，直接回车默认使用 <code>diff HEAD~1</code>。</div>
+    </div>
+  </section>
+
+  <!-- ═══ FLOW ═══ -->
+  <section id="flow">
+    <div class="section-label">执行流程</div>
+    <h2>七个阶段</h2>
+
+    <div class="flow">
+      <div class="flow-phase"><span class="flow-num">阶段 0</span><span>配置加载</span></div>
+      <div class="flow-tree">
+        <span class="branch">├─ </span><span class="leaf">三层 YAML 配置（/etc / ~/.ht-review / 项目）</span><br>
+        <span class="branch">├─ </span><span class="leaf">三层忽略规则（.ht-reviewignore）</span><br>
+        <span class="branch">└─ </span><span class="leaf">项目 Review 指南（REVIEW.md，自由文本）</span>
+      </div>
+      <hr class="flow-sep">
+
+      <div class="flow-phase"><span class="flow-num">阶段 1</span><span>参数解析</span></div>
+      <div class="flow-tree">
+        <span class="branch">├─ </span><span class="leaf">--list / --show → 查询历史，立即退出</span><br>
+        <span class="branch">└─ </span><span class="leaf">继续 review 流程</span>
+      </div>
+      <hr class="flow-sep">
+
+      <div class="flow-phase"><span class="flow-num">阶段 2</span><span>上下文构建</span></div>
+      <div class="flow-tree">
+        <span class="branch">├─ </span><span class="leaf">2.1 获取代码变更（diff / branch / files 三模式）</span><br>
+        <span class="branch">├─ </span><span class="leaf">2.2 应用忽略规则（glob + !pattern）</span><br>
+        <span class="branch">├─ </span><span class="leaf">2.3 探索调用链（Grep 调用方 + 读测试文件）</span><br>
+        <span class="branch">├─ </span><span class="leaf">2.4 读取文档（本地/PDF/图片/URL/需登录页面）</span><br>
+        <span class="branch">└─ </span><span class="highlight">2.5 静态分析前置检查 ← 编译失败立即终止</span>
+      </div>
+      <hr class="flow-sep">
+
+      <div class="flow-phase"><span class="flow-num">阶段 3a</span><span>Claude Code 独立 Review（10 个维度）</span></div>
+      <div class="flow-phase"><span class="flow-num">阶段 3b</span><span>Codex CLI 独立 Review（并行执行）</span></div>
+      <hr class="flow-sep">
+
+      <div class="flow-phase"><span class="flow-num">阶段 4</span><span>交叉合并</span></div>
+      <div class="flow-tree">
+        <span class="branch">├─ </span><span class="leaf">issues 合并（共识判定 + 过滤 + 排序）</span><br>
+        <span class="branch">├─ </span><span class="leaf">test_case_coverage 合并</span><br>
+        <span class="branch">└─ </span><span class="leaf">deployment_checklist 合并</span>
+      </div>
+      <hr class="flow-sep">
+
+      <div class="flow-phase"><span class="flow-num">阶段 5</span><span>输出 Markdown 报告</span></div>
+      <div class="flow-phase"><span class="flow-num">阶段 6</span><span>持久化存储（写本地缓存 + 更新索引）</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ STATIC ANALYSIS ═══ -->
+  <section id="static">
+    <div class="section-label">阶段 2.5</div>
+    <h2>静态分析前置检查</h2>
+    <p>在 AI review 之前，用工具链做<strong>确定性检查</strong>。编译必须通过，工具发现的问题注入上下文，AI 不重新判断，只补充说明和建议。</p>
+
+    <h3>语言自动识别</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>特征文件</th><th>识别语言</th></tr></thead>
+      <tbody>
+        <tr><td>go.mod</td><td>Go</td></tr>
+        <tr><td>pom.xml / build.gradle / build.gradle.kts</td><td>Java</td></tr>
+        <tr><td>pyproject.toml / setup.py / requirements.txt</td><td>Python</td></tr>
+        <tr><td>均不存在</td><td>跳过，输出警告</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:12px;color:var(--text3)">支持 monorepo 多语言同时检测。</p>
+
+    <h3>各语言工具链</h3>
+    <div class="lang-grid">
+      <div class="lang-card">
+        <span class="lang-icon">🐹</span>
+        <div class="lang-name">Go</div>
+        <div class="tool-row"><span class="tool-name">go build ./...</span><span class="badge badge-must">必须通过</span></div>
+        <div class="tool-row"><span class="tool-name">go vet ./...</span><span class="badge badge-run">始终运行</span></div>
+        <div class="tool-row"><span class="tool-name">golangci-lint</span><span class="badge badge-opt">有则运行</span></div>
+      </div>
+      <div class="lang-card">
+        <span class="lang-icon">☕</span>
+        <div class="lang-name">Java</div>
+        <div class="tool-row"><span class="tool-name">mvn compile</span><span class="badge badge-must">必须通过</span></div>
+        <div class="tool-row"><span class="tool-name">spotbugs:check</span><span class="badge badge-opt">有插件则运行</span></div>
+        <div class="tool-row"><span class="tool-name">checkstyle:check</span><span class="badge badge-opt">有插件则运行</span></div>
+      </div>
+      <div class="lang-card">
+        <span class="lang-icon">🐍</span>
+        <div class="lang-name">Python</div>
+        <div class="tool-row"><span class="tool-name">py_compile</span><span class="badge badge-must">必须通过</span></div>
+        <div class="tool-row"><span class="tool-name">ruff check</span><span class="badge badge-run">优先使用</span></div>
+        <div class="tool-row"><span class="tool-name">mypy</span><span class="badge badge-opt">有则运行</span></div>
+      </div>
+    </div>
+
+    <div class="callout callout-danger">
+      <span class="callout-icon">🚨</span>
+      <div><strong>编译失败立即终止</strong>——输出完整错误信息后直接退出，不进入 AI review 阶段，阶段 6 存储也跳过。请修复编译错误后重新运行。</div>
+    </div>
+
+    <pre data-lang="bash"><code><span class="comment"># Go 静态分析示例</span>
+<span class="cmd">go build</span> ./...                        <span class="comment"># 编译检查</span>
+<span class="cmd">go vet</span> ./...                          <span class="comment"># 内置静态分析</span>
+<span class="cmd">golangci-lint</span> run <span class="flag">--new-from-rev</span> HEAD~1 <span class="comment"># 仅检查变更文件</span></code></pre>
+  </section>
+
+  <!-- ═══ DIMENSIONS ═══ -->
+  <section id="dimensions">
+    <div class="section-label">阶段 3a</div>
+    <h2>审查维度（共 10 个）</h2>
+
+    <div class="dim-grid">
+      <div class="dim-card always">
+        <div class="dim-header">
+          <span class="dim-num">#1</span>
+          <span class="dim-name">安全性</span>
+          <span class="dim-trigger">始终</span>
+        </div>
+        <div class="dim-items">SQL注入 · XSS · 硬编码密钥 · 鉴权缺失 · 弱加密 · 路径遍历</div>
+      </div>
+      <div class="dim-card always">
+        <div class="dim-header">
+          <span class="dim-num">#2</span>
+          <span class="dim-name">性能</span>
+          <span class="dim-trigger">始终</span>
+        </div>
+        <div class="dim-items">N+1查询 · 全表扫描 · 大数据内存加载 · 缓存使用 · 同步阻塞IO</div>
+      </div>
+      <div class="dim-card always">
+        <div class="dim-header">
+          <span class="dim-num">#3</span>
+          <span class="dim-name">功能正确性</span>
+          <span class="dim-trigger">始终</span>
+        </div>
+        <div class="dim-items">边界条件 · 异常处理 · 状态机完整性 · 资源关闭 · 事务边界</div>
+      </div>
+      <div class="dim-card always">
+        <div class="dim-header">
+          <span class="dim-num">#4</span>
+          <span class="dim-name">代码质量</span>
+          <span class="dim-trigger">始终</span>
+        </div>
+        <div class="dim-items">命名规范 · 方法长度 · 重复代码 · 魔法数字 · 死代码 · 日志规范</div>
+      </div>
+      <div class="dim-card always">
+        <div class="dim-header">
+          <span class="dim-num">#5</span>
+          <span class="dim-name">测试覆盖</span>
+          <span class="dim-trigger">始终</span>
+        </div>
+        <div class="dim-items">核心路径 · 异常路径 · 断言完整性 · Mock使用 · 边界值</div>
+      </div>
+      <div class="dim-card conditional">
+        <div class="dim-header">
+          <span class="dim-num">#6</span>
+          <span class="dim-name">需求符合度</span>
+          <span class="dim-trigger">有 --req</span>
+        </div>
+        <div class="dim-items">实现是否覆盖需求所有功能点，行为是否与预期一致</div>
+      </div>
+      <div class="dim-card conditional">
+        <div class="dim-header">
+          <span class="dim-num">#7</span>
+          <span class="dim-name">测试用例覆盖</span>
+          <span class="dim-trigger">有 --testcase</span>
+        </div>
+        <div class="dim-items">逐条核对用例是否有实现路径和对应测试方法</div>
+      </div>
+      <div class="dim-card conditional">
+        <div class="dim-header">
+          <span class="dim-num">#8</span>
+          <span class="dim-name">自定义规则</span>
+          <span class="dim-trigger">有配置</span>
+        </div>
+        <div class="dim-items">逐条检查 .ht-review.yml 中 custom_rules 定义的规则</div>
+      </div>
+      <div class="dim-card conditional">
+        <div class="dim-header">
+          <span class="dim-num">#9</span>
+          <span class="dim-name">项目 Review 指南</span>
+          <span class="dim-trigger">有 REVIEW.md</span>
+        </div>
+        <div class="dim-items">对照项目规范/架构约束/业务规则逐条检查，违反项 category = PROJECT_GUIDELINE</div>
+      </div>
+      <div class="dim-card always">
+        <div class="dim-header">
+          <span class="dim-num">#10</span>
+          <span class="dim-name">上线注意事项</span>
+          <span class="dim-trigger">始终</span>
+        </div>
+        <div class="dim-items">主动提取 DB 变更、配置、上线顺序、缓存、MQ 等，输出 deployment_checklist</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ DEPLOYMENT ═══ -->
+  <section id="deployment">
+    <div class="section-label">维度 #10</div>
+    <h2>上线注意事项</h2>
+    <p>从代码变更中<strong>主动识别</strong>，无需人工提示。输出到独立的 <code>deployment_checklist</code>（不混入 issues），按 timing 分组、risk 排序。</p>
+
+    <div class="table-wrap">
+    <table class="deploy-table">
+      <thead><tr><th>类型</th><th>说明</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td>DB_DDL</td><td>DDL 变更，附 SQL</td><td>ALTER TABLE user ADD COLUMN tag VARCHAR(64)</td></tr>
+        <tr><td>DB_DML</td><td>存量数据迁移/修复脚本</td><td>UPDATE user SET status=1 WHERE ...</td></tr>
+        <tr><td>CONFIG</td><td>Apollo/Nacos/配置文件修改项</td><td>新增 oss.host.prefix</td></tr>
+        <tr><td>FEATURE_FLAG</td><td>新增开关、环境变量</td><td>新增 enable_new_upload</td></tr>
+        <tr><td>DEPLOY_ORDER</td><td>多服务上线顺序依赖</td><td>需先上线 oss-service</td></tr>
+        <tr><td>CACHE</td><td>缓存 key 结构变化需清理/预热</td><td>key 格式从 user:id 改为 u:id</td></tr>
+        <tr><td>MQ</td><td>新增 Topic/Consumer Group</td><td>需提前创建 order-notify-topic</td></tr>
+        <tr><td>INFRA</td><td>新增外部依赖需提前申请资源</td><td>新增 Redis 实例</td></tr>
+        <tr><td>OTHER</td><td>其他上线注意事项</td><td>—</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>每条标注 <code>timing</code>（上线前 / 上线时 / 上线后）和 <code>risk</code>（<span class="risk-high">HIGH</span> / <span class="risk-medium">MEDIUM</span> / <span class="risk-low">LOW</span>）。</p>
+  </section>
+
+  <!-- ═══ CROSS MERGE ═══ -->
+  <section id="cross">
+    <div class="section-label">阶段 4</div>
+    <h2>交叉合并规则</h2>
+
+    <h3>同一问题判定（全部满足）</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>条件</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>同一文件</td><td>file 字段相同</td></tr>
+        <tr><td>同一类别</td><td>category 字段相同</td></tr>
+        <tr><td>行号邻近</td><td>line_start 差值 ≤ 5，或行号区间有重叠；任一为 null 时仅凭前两条判断</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>排序规则</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>优先级</th><th>规则</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>severity 降序：BLOCKER → MAJOR → MINOR → INFO</td></tr>
+        <tr><td>2</td><td>同 severity 内：[共识] 优先 → [Claude] → [Codex]</td></tr>
+        <tr><td>3</td><td>同来源内：按文件名字母序，同文件按行号升序</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ═══ CONFIG ═══ -->
+  <section id="config">
+    <div class="section-label">配置体系</div>
+    <h2>三层配置覆盖</h2>
+
+    <div class="flow">
+      <div class="flow-phase"><span class="flow-num" style="color:var(--text3)">最低优先</span><span style="color:var(--text3)">/etc/ht-review/config.yml — 系统级</span></div>
+      <div class="flow-phase"><span class="flow-num" style="color:var(--text2)">中等优先</span><span style="color:var(--text2)">~/.ht-review/config.yml — 用户级</span></div>
+      <div class="flow-phase"><span class="flow-num" style="color:var(--cyan)">最高优先</span><span style="color:var(--cyan)">.ht-review.yml — 项目级（覆盖上层）</span></div>
+    </div>
+
+    <pre data-lang="yaml"><code><span class="comment"># .ht-review.yml — 项目级配置示例</span>
+dimensions:
+  security: <span class="str">true</span>
+  performance: <span class="str">true</span>
+  correctness: <span class="str">true</span>
+  code_quality: <span class="str">true</span>
+  maintainability: <span class="str">true</span>
+  test_coverage: <span class="str">true</span>
+  requirement: <span class="str">true</span>    <span class="comment"># 有 --req 时生效</span>
+  test_case: <span class="str">true</span>      <span class="comment"># 有 --testcase 时生效</span>
+  deployment: <span class="str">true</span>     <span class="comment"># 上线注意事项，始终生效</span>
+min_severity: MAJOR       <span class="comment"># 改为 MAJOR 可减少噪音</span>
+custom_rules:
+  - <span class="str">"需要鉴权的接口 path 必须包含 /uauth/"</span>
+  - <span class="str">"Service 层禁止直接使用 HttpServletRequest"</span>
+codex:
+  model: o3
+report:
+  show_info: <span class="str">true</span>
+  show_consensus_only: <span class="str">false</span></code></pre>
+  </section>
+
+  <!-- ═══ REVIEW.MD ═══ -->
+  <section id="review-md">
+    <div class="section-label">项目指南</div>
+    <h2>REVIEW.md</h2>
+    <p>在项目根目录放置 <code>REVIEW.md</code>，内容自动注入为<strong>第 9 个审查维度</strong>，违反项 category 标为 <code>PROJECT_GUIDELINE</code>。格式不限，自由文本 Markdown。</p>
+
+    <pre data-lang="markdown"><code><span class="comment"># 项目 Review 规范</span>
+
+<span class="kw">## 接口规范</span>
+- 需要鉴权的接口，path 必须包含 `/uauth/`
+- 对外网暴露的接口，path 必须包含 `/gwpub/`
+
+<span class="kw">## 架构约束</span>
+- Service 层禁止直接依赖 HttpServletRequest
+- 跨模块调用必须通过 Feign Client，禁止直接注入对方 Repository
+
+<span class="kw">## 数据库规范</span>
+- 批量查询必须加分页，禁止无 LIMIT 的 SELECT *
+- 新增表必须包含 create_time / update_time / is_deleted
+
+<span class="kw">## 日志规范</span>
+- 外部接口入参必须打印 INFO 日志
+- catch 后必须打印完整 stack trace</code></pre>
+  </section>
+
+  <!-- ═══ IGNORE ═══ -->
+  <section id="ignore">
+    <div class="section-label">忽略规则</div>
+    <h2>.ht-reviewignore</h2>
+    <p>三层叠加，支持 glob 模式。项目级 <code>!pattern</code> 可取消上层已定义的同名规则。</p>
+
+    <pre data-lang="gitignore"><code><span class="comment"># .ht-reviewignore</span>
+**/generated/**
+*.min.js
+vendor/**
+<span class="str">!src/vendor/custom.js</span>   <span class="comment"># 取消上层对此文件的忽略</span></code></pre>
+  </section>
+
+  <hr>
+
+  <!-- ═══ REPORT ═══ -->
+  <section id="report">
+    <div class="section-label">阶段 5</div>
+    <h2>报告格式</h2>
+
+    <div class="report-preview">
+      <div class="rp-bar">
+        <div class="rp-dot" style="background:#ff5f57"></div>
+        <div class="rp-dot" style="background:#febc2e"></div>
+        <div class="rp-dot" style="background:#28c840"></div>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:8px">review-report.md</span>
+      </div>
+      <div class="rp-body">
+        <div class="rp-title"># ht-review 交叉代码 Review 报告</div>
+        <div class="rp-meta">
+          时间：2026-04-28 10:30 &nbsp;·&nbsp; 代码范围：diff HEAD~1<br>
+          需求文档：未提供 &nbsp;·&nbsp; 项目指南：REVIEW.md &nbsp;·&nbsp; min_severity=INFO
+        </div>
+
+        <div class="rp-h2">## 摘要</div>
+        <div style="color:var(--text3);font-size:11px">
+          | 级别 | 总计 | 🤝共识 | 🔵仅Claude | 🟡仅Codex |<br>
+          | BLOCKER | 1 | 1 | 0 | 0 |<br>
+          | MAJOR &nbsp; | 3 | 2 | 1 | 0 |
+        </div>
+
+        <div style="margin:8px 0;font-size:12px">
+          <span class="rp-ok">✅ go build（编译通过）</span><br>
+          <span class="rp-warn">⚠️ go vet：2 个问题</span><br>
+          <span style="color:var(--text3)">⏭️ golangci-lint：未安装</span>
+        </div>
+
+        <div class="rp-h2">## 🔴 BLOCKER</div>
+        <div class="rp-h3">### 1. [共识] `UserService.java:42` — 未校验用户权限</div>
+        <div style="color:var(--text3);font-size:11px">- 来源：Claude + Codex 均发现（高置信度）</div>
+
+        <div class="rp-h2">## 🚀 上线注意事项</div>
+        <div style="color:var(--text3);font-size:11px">
+          | 🔴 HIGH | DB_DDL | 新增 user_tag 字段 | ALTER TABLE ... |<br>
+          | 🟠 MEDIUM | CONFIG | 新增 Apollo 配置项 | oss.host.prefix |
+        </div>
+
+        <div class="rp-save">
+          💾 Review 结果已保存 → .ht-review-cache/abc1234f/<br>
+          查看本次：/ht-review --show abc1234f &nbsp;·&nbsp; 查看历史：/ht-review --list
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ STORAGE ═══ -->
+  <section id="storage">
+    <div class="section-label">阶段 6</div>
+    <h2>本地持久化存储</h2>
+
+    <div class="file-tree">
+      <span class="ft-dir">.ht-review-cache/</span>
+      <span class="ft-indent ft-comment">← 建议加入 .gitignore，不提交到仓库</span>
+      <span class="ft-indent"><span class="ft-dir">index.json</span> <span class="ft-comment">← 统一索引，最多 100 条，供 --list 使用</span></span>
+      <span class="ft-indent"><span class="ft-dir">abc1234f/</span> <span class="ft-comment">← commit hash 前 8 位</span></span>
+      <span class="ft-indent2"><span class="ft-file">report.md</span> <span class="ft-comment">← 完整 Markdown 报告（人类可读）</span></span>
+      <span class="ft-indent2"><span class="ft-file">result.json</span> <span class="ft-comment">← MERGED_ISSUES 结构化数据（程序可读）</span></span>
+      <span class="ft-indent2"><span class="ft-file">meta.json</span> <span class="ft-comment">← 时间/作者/文件列表/问题统计</span></span>
+    </div>
+
+    <h3>存储规则</h3>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>情况</th><th>行为</th></tr></thead>
+      <tbody>
+        <tr><td>同一 commit 重新 review</td><td>覆盖，不重复</td></tr>
+        <tr><td>branch/files 模式</td><td>目录名加后缀，如 abc1234f-branch</td></tr>
+        <tr><td>index.json 超过 100 条</td><td>自动删除最旧记录</td></tr>
+        <tr><td>index.json 更新</td><td>用 Python 脚本，无 jq 依赖</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <pre data-lang="bash"><code><span class="comment"># 将缓存目录加入 .gitignore</span>
+<span class="cmd">echo</span> <span class="str">'.ht-review-cache/'</span> >> .gitignore</code></pre>
+  </section>
+
+  <!-- ═══ HISTORY ═══ -->
+  <section id="history">
+    <div class="section-label">历史查询</div>
+    <h2>--list / --show</h2>
+    <p>查询命令<strong>立即退出</strong>，不触发 review 流程。</p>
+
+    <pre data-lang="bash"><code><span class="comment"># 列出最近 20 条，按时间降序</span>
+<span class="cmd">/ht-review</span> <span class="flag">--list</span>
+
+<span class="comment"># 只看有 BLOCKER 的记录</span>
+<span class="cmd">/ht-review</span> <span class="flag">--list</span> <span class="flag">--filter</span> blocker
+
+<span class="comment"># 按 hash 前缀查看完整报告（前缀匹配，4位以上即可）</span>
+<span class="cmd">/ht-review</span> <span class="flag">--show</span> abc1234f</code></pre>
+
+    <p style="font-size:13px;color:var(--text3)">--list 输出示例：</p>
+    <div class="flow" style="font-size:12px">
+      <span style="color:var(--text3)">| Hash &nbsp;&nbsp;&nbsp;&nbsp; | 时间 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Commit &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 🔴 | 🟠 | 🟡 |</span><br>
+      <span style="color:var(--text2)">| abc1234f | 2026-04-28 10:30 | feat: 微信小程序直传返回host信息 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 0 &nbsp;| 2 &nbsp;| 5 &nbsp;|</span><br>
+      <span style="color:var(--text2)">| def5678a | 2026-04-27 15:20 | fix: 表单上传host前缀调整 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 1 &nbsp;| 0 &nbsp;| 3 &nbsp;|</span>
+    </div>
+  </section>
+
+  <!-- ═══ CODEX ═══ -->
+  <section id="codex">
+    <div class="section-label">可选依赖</div>
+    <h2>Codex CLI</h2>
+    <p>未安装时自动降级为 Claude Code 单路 review，报告摘要标注警告，其余流程完全正常。</p>
+
+    <pre data-lang="bash"><code><span class="comment"># 安装 Codex CLI（可选，启用双路 review）</span>
+<span class="cmd">npm</span> install <span class="flag">-g</span> @openai/codex</code></pre>
+
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div>未安装 Codex CLI 时，报告摘要下方显示提示，所有 issues 来源均标为 <code>[Claude]</code>，无 <code>[共识]</code> 标注。</div>
+    </div>
+  </section>
+
+  </div><!-- /content -->
+</main>
+
+</div><!-- /layout -->
+
+<script>
+  // Intersection observer for section fade-in
+  const sections = document.querySelectorAll('section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Active nav on scroll
+  const navItems = document.querySelectorAll('.nav-item');
+  const sectionIds = Array.from(sections).map(s => s.id).filter(Boolean);
+
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.remove('active'));
+        const active = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+        if (active) {
+          active.classList.add('active');
+          active.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    });
+  }, { threshold: 0.4 });
+
+  sections.forEach(s => { if (s.id) scrollObserver.observe(s); });
+</script>
+</body>
+</html>
